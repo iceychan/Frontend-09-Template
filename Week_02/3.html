@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <style>
+    .cell{
+      flex-basis: 6px;
+      width: 6px;
+      height: 6px;
+      background: gray;
+      border-right: 1px solid white;
+      border-bottom: 1px solid white;
+      box-sizing: border-box;
+    }
+    
+    #container{
+      display: flex;
+      width: 602px;
+      height: auto;
+      border: 1px solid red;
+      flex-flow: wrap;
+      box-sizing: border-box;
+    }
+    </style>
+
+</head>
+  
+<body>
+  <div id="container"></div>
+  <button onclick="localStorage['map'] = JSON.stringify(map)">save</button>
+</body>
+
+<script>
+  let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0)
+
+  let container = document.getElementById('container')
+  for(let y=0;y<100;y++){
+    for(let x=0;x<100;x++){
+      let cell = document.createElement('div')
+      cell.classList.add('cell')
+
+      if(map[100*y  + x ] === 1){
+        cell.style.background = 'black'
+      }
+
+      cell.addEventListener('mousemove',() => {
+        if(mousedown){
+          if(clear){
+            cell.style.background = ''
+            map[100*y + x] = 0
+          }else{
+            cell.style.background = 'black'
+            map[100*y + x] = 1
+          }
+        }
+      })
+      container.appendChild(cell)
+    }
+
+  }
+
+  let mousedown = false
+  let clear = false
+  document.addEventListener('mousedown',e=>{
+    mousedown=true
+    clear = (e.which === 3)
+  })
+  document.addEventListener('mouseup',() => mousedown = false)
+  document.addEventListener('contextmenu',e => e.preventDefault())
+
+  function sleep(t){
+    return new Promise(resolve => {
+      setTimeout(resolve, t);
+    })
+  }
+
+  async function path(map,start,end){
+    let queue = [start]
+
+    async function insert(x,y){
+
+      if(x < 0 || x >= 100 || y < 0 || y >= 100){
+        return
+      }
+      if(map[y * 100 + x]){
+        return
+      }
+
+      await sleep(3)
+      container.children[y * 100 + x].style.background = 'lightgreen'
+
+      map[y * 100 + x] = 2
+      queue.push([x,y])
+    }
+
+    while(queue.length){
+      let [x,y] = queue.shift()
+      if(end[0] === x && end[1] === y){
+        container.children[end[0] * 100 + end[1]].style.background = 'red'
+        return true
+      }
+
+      await insert(x - 1,y)
+      await insert(x + 1,y)
+      await insert(x,y - 1)
+      await insert(x,y + 1)
+    }
+  }
+
+</script>
+
+</html>
+
+
